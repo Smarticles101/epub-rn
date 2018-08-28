@@ -1,4 +1,4 @@
-var xml2js = require('xml2js');
+var xml2js = require('react-native-xml2js');
 var xml2jsOptions = xml2js.defaults['0.1'];
 var EventEmitter = require('events');
 const hackRequire = require;
