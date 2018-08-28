@@ -1,30 +1,38 @@
 var xml2js = require('react-native-xml2js');
 var xml2jsOptions = xml2js.defaults['0.1'];
 var EventEmitter = require('events');
-const hackRequire = require;
 
-try {
-    // zipfile is an optional dependency:
-    var ZipFile = hackRequire("zipfile").ZipFile;
-} catch (err) {
-    // Mock zipfile using pure-JS adm-zip:
-    var AdmZip = hackRequire('adm-zip');
+// Mock zipfile using pure-JS jszip:
+var JSZip = require('jszip');
+var JSZipUtils = require('jszip-utils')
 
-    var ZipFile = function(filename) {
-        this.admZip = new AdmZip(filename);
-        this.names = this.admZip.getEntries().map(function(zipEntry) {
-            return zipEntry.entryName;
-        });
-        this.count = this.names.length;
-    };
-    ZipFile.prototype.readFile = function(name, cb) {
-        this.admZip.readFileAsync(this.admZip.getEntry(name), function(buffer, error) {
-            // `error` is bogus right now, so let's just drop it.
-            // see https://github.com/cthackers/adm-zip/pull/88
-            return cb(null, buffer);
-        });
-    };
-}
+var ZipFile = async function(filename) {
+    const data = await new JSZip.external.Promise((resolve, reject) => {
+        JSZipUtils.getBinaryContent(uri, (err, data) => {
+            if (err) {
+                reject(err)
+            } else {
+                resolve(data)
+            }
+        })
+    })
+
+    this.jszip = new JSZip();
+
+    this.zip = await this.jszip.loadAsync(data);
+
+    this.names = Object.keys(this.zip.files).map(function(relativePath) {
+        return relativePath;
+    });
+
+    this.count = this.names.length;
+};
+ZipFile.prototype.readFile = function(name, cb) {
+    this.zip.file(name).async("nodebuffer").then(function(buffer){
+        return cb(null, buffer);
+    });
+};
+
 
 //TODO: Cache parsed data
 

@@ -35,11 +35,9 @@
     "books"
   ],
   "dependencies": {
-    "adm-zip": "^0.4.11",
     "events": "^3.0.0",
+    "jszip": "^3.1.5",
+    "jszip-utils": "0.0.2",
     "react-native-xml2js": "^1.0.3"
-  },
-  "optionalDependencies": {
-    "zipfile": "^0.5.11"
   }
 }
