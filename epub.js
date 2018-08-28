@@ -1,13 +1,14 @@
 var xml2js = require('xml2js');
 var xml2jsOptions = xml2js.defaults['0.1'];
 var EventEmitter = require('events');
+const hackRequire = require;
 
 try {
     // zipfile is an optional dependency:
-    var ZipFile = require("zipfile").ZipFile;
+    var ZipFile = hackRequire("zipfile").ZipFile;
 } catch (err) {
     // Mock zipfile using pure-JS adm-zip:
-    var AdmZip = require('adm-zip');
+    var AdmZip = hackRequire('adm-zip');
 
     var ZipFile = function(filename) {
         this.admZip = new AdmZip(filename);
