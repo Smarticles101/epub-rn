@@ -1,5 +1,5 @@
 {
-  "name": "epub",
+  "name": "epub-rn",
   "description": "Parse ePub electronic book files with Node.JS",
   "version": "0.2.1",
   "author": "Andris Reinman",
