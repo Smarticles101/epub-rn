@@ -6,32 +6,35 @@ var EventEmitter = require('events');
 var JSZip = require('jszip');
 var JSZipUtils = require('jszip-utils')
 
-var ZipFile = async function(filename) {
-    const data = await new JSZip.external.Promise((resolve, reject) => {
-        JSZipUtils.getBinaryContent(uri, (err, data) => {
-            if (err) {
-                reject(err)
-            } else {
-                resolve(data)
-            }
+class ZipFile {
+    async init(uri) {
+        const data = await new JSZip.external.Promise((resolve, reject) => {
+            JSZipUtils.getBinaryContent(uri, (err, data) => {
+                if (err) {
+                    reject(err)
+                } else {
+                    resolve(data)
+                }
+            })
         })
-    })
 
-    this.jszip = new JSZip();
+        this.jszip = new JSZip();
 
-    this.zip = await this.jszip.loadAsync(data);
+        this.zip = await this.jszip.loadAsync(data);
 
-    this.names = Object.keys(this.zip.files).map(function(relativePath) {
-        return relativePath;
-    });
+        this.names = Object.keys(this.zip.files).map(function(relativePath) {
+            return relativePath;
+        });
 
-    this.count = this.names.length;
-};
-ZipFile.prototype.readFile = function(name, cb) {
-    this.zip.file(name).async("nodebuffer").then(function(buffer){
-        return cb(null, buffer);
-    });
-};
+        this.count = this.names.length;
+    }
+
+    readFile(name, cb) {
+        this.zip.file(name).async("string").then(function(buffer){
+            return cb(null, buffer);
+        });
+    };
+}
 
 
 //TODO: Cache parsed data
@@ -104,9 +107,11 @@ class EPub extends EventEmitter {
      *  Opens the epub file with Zip unpacker, retrieves file listing
      *  and runs mime type check
      **/
-    open() {
+    async open() {
+
         try {
-            this.zip = new ZipFile(this.filename);
+            this.zip = new ZipFile();
+            await this.zip.init(this.filename);
         } catch (E) {
             this.emit("error", new Error("Invalid/missing file"));
             return;
@@ -144,7 +149,7 @@ class EPub extends EventEmitter {
                 this.emit("error", new Error("Reading archive failed"));
                 return;
             }
-            var txt = data.toString("utf-8").toLowerCase().trim();
+            var txt = data.toLowerCase().trim();
     
             if (txt  !=  "application/epub+zip") {
                 this.emit("error", new Error("Unsupported mime type"));
@@ -180,7 +185,7 @@ class EPub extends EventEmitter {
                 this.emit("error", new Error("Reading archive failed"));
                 return;
             }
-            var xml = data.toString("utf-8").toLowerCase().trim(),
+            var xml = data.toLowerCase().trim(),
                 xmlparser = new xml2js.Parser(xml2jsOptions);
     
             xmlparser.on("end", (function (result) {
@@ -258,7 +263,7 @@ class EPub extends EventEmitter {
                 this.emit("error", new Error("Reading archive failed"));
                 return;
             }
-            var xml = data.toString("utf-8"),
+            var xml = data,
                 xmlparser = new xml2js.Parser(xml2jsOptions);
     
             xmlparser.on("end", this.parseRootFile.bind(this));
@@ -485,7 +490,7 @@ class EPub extends EventEmitter {
                 this.emit("error", new Error("Reading archive failed"));
                 return;
             }
-            var xml = data.toString("utf-8"),
+            var xml = data,
                 xmlparser = new xml2js.Parser(xml2jsOptions);
     
             xmlparser.on("end", (function (result) {
@@ -695,7 +700,7 @@ class EPub extends EventEmitter {
                     return;
                 }
     
-                var str = data.toString("utf-8");
+                var str = data;
     
                 callback(null, str);
     
@@ -766,7 +771,7 @@ class EPub extends EventEmitter {
                     callback(new Error('Reading archive failed'));
                     return;
                 }
-                callback(null, data.toString(options));
+                callback(null, data);
             });
         } else {
             throw new TypeError('Bad arguments');
